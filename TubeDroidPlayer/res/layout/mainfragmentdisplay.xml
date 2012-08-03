@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:custom="jp.co.mti.adc.growup.fragmentplayer"
+    android:id="@+id/main"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <jp.co.mti.adc.growup.fragmentplayer.widget.FacebookLikePager
+        android:id="@+id/fragment_slide_fragment_support_pager"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        custom:rightspace="50.0dp" >
+
+        <!-- リスト画面のFragment -->
+
+        <fragment
+            android:id="@+id/fragment_slide_fragment_behind_fragment"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:name="jp.co.mti.adc.growup.fragmentplayer.fragment.LeftPlayListFragment"
+            android:tag="Behind" >
+
+            <!-- リスト画面用のフィルター -->
+
+            <View
+                android:id="@+id/leftspacearea"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" />
+        </fragment>
+
+        <!-- TOP画面のFragment -->
+
+        <fragment
+            android:id="@+id/fragment_slide_fragment_wrap_fragment"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:name="jp.co.mti.adc.growup.fragmentplayer.fragment.PlayerFragment"
+            android:tag="Wrap" >
+
+            <!-- TOP画面用のフィルター -->
+
+            <View
+                android:id="@+id/rightspacearea"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent" />
+        </fragment>
+    </jp.co.mti.adc.growup.fragmentplayer.widget.FacebookLikePager>
+
+</RelativeLayout>

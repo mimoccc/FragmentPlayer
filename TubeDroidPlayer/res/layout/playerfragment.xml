@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#000000"
+    android:orientation="vertical" >
+
+    <include layout="@layout/actionbar_layout" />
+
+    <RelativeLayout
+        android:id="@+id/relativeLayout1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+
+        <RelativeLayout
+            android:id="@+id/playerContainer"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#000000" >
+
+            <LinearLayout
+                android:id="@+id/textContainer"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone" >
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:textSize="30sp" />
+
+                <TextView
+                    android:id="@+id/artist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/album"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/jacketImage"
+                android:layout_width="320dip"
+                android:layout_height="320dip"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true" />
+
+            <TextView
+                android:id="@+id/noSelectionText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:text="リストから楽曲を選択してください" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/jacketImage"
+                android:layout_centerHorizontal="true"
+                android:paddingTop="10dip" >
+
+                <TextView
+                    android:id="@+id/shuffleTtext"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="シャッフル /"
+                    android:visibility="invisible" />
+
+                <TextView
+                    android:id="@+id/pause_start"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:paddingLeft="10dip"
+                    android:paddingRight="10dip"
+                    android:text="停止中" />
+
+                <TextView
+                    android:id="@+id/repeatText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="/ 1曲リピート"
+                    android:visibility="invisible" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <android.gesture.GestureOverlayView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/gestures"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:eventsInterceptionEnabled="true"
+            android:gestureStrokeType="single"
+            android:orientation="vertical" >
+        </android.gesture.GestureOverlayView>
+    </RelativeLayout>
+
+</LinearLayout>

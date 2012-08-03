@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, TubeDroidPlayerActivity!</string>
+    <string name="app_name">FragmentPlayer</string>
+    <string name ="debug">false</string>
+    <string name="base_url_debug">http://www.google.ne.jp</string>
+    <string name="base_url">http://www.google.ne.jp</string>
+    <string name="Title">楽曲一覧</string>
+    <string name="NoSongs">楽曲がありません</string>
+    <string name="NoArtist">検索結果：0件</string>
+    <string name="Search">検索</string>
+    <string name="Cancel">キャンセル</string>
+    <string name="Percent">%</string>
+    <string name="EnableGestureText">ジェスチャー制御使用可能</string>
+    <string name="SelectMusic">楽曲を選んでください</string>
+    <string name="PlayerPause">停止中</string>
+    <string name="PlayerPlaying">再生中</string>
+    
+    
+</resources>
