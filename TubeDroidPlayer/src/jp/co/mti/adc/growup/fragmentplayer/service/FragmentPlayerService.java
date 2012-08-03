@@ -123,6 +123,7 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
     @Override
     public IBinder onBind(Intent intent) {
         Log.e(TAG, "onBind");
+        // TODO Bindされたらそのとき再生している楽曲に関する情報
         return binder;
     }
 
@@ -146,7 +147,7 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
             mMediaPlayer.setDataSource(audio.data);
             mMediaPlayer.prepare();
             isPrepared = true;
-            play();
+            mMediaPlayer.start();
         } catch (IllegalArgumentException e) {
             Log.e("play error IllegalArgument", e.toString());
         } catch (IllegalStateException e) {
@@ -156,15 +157,9 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
         }
 
         // TODO ブロードキャストを投げる
-    }
+        Intent intent = new Intent();
 
-    /**
-     * 再生処理
-     */
-    private void play() {
-        // 現在セットされている曲を再生する
-        mMediaPlayer.start();
-
+        sendBroadcast(intent);
     }
 
     /**
