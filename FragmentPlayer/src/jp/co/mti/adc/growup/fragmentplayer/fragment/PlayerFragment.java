@@ -24,6 +24,7 @@ import android.gesture.Prediction;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -67,18 +68,6 @@ public class PlayerFragment extends Fragment implements OnClickListener, OnGestu
 
     /** TOP画面のジャケ写表示部分のImageView . */
     private ImageView mJacketImage;
-
-    /** 再生中かどうか. */
-    private int mState = 0;
-
-    /** 再生中. */
-    private final int STATE_PLAY = 1;
-
-    /** 停止中. */
-    private final int STATE_PAUSE = 0;
-
-    /** オーディオid. */
-    private String mAudioId;
 
     /** context. */
     private Context mContext;
@@ -221,13 +210,18 @@ public class PlayerFragment extends Fragment implements OnClickListener, OnGestu
             mListButtonListener.onListButtonTouch();
             break;
         case R.id.gestures:// ジェスチャのタップでplay/pauseを切り替える
-            switch (mState) {
-            case STATE_PLAY:
-                mContext.startService(new Intent(FragmentPlayerService.ACTION_PAUSE));
-                break;
-            case STATE_PAUSE:
-                mContext.startService(new Intent(FragmentPlayerService.ACTION_PLAY));
-                break;
+            if (FragmentPlayerService.isPlaying()) {
+                changePlayingText();
+                Log.v("PlayerFragment", "clickpause!");
+                Intent intent = new Intent(mContext, FragmentPlayerService.class);
+                intent.setAction(FragmentPlayerService.ACTION_PAUSE);
+                mContext.startService(intent);
+            } else {
+                changePlayingText();
+                Log.v("PlayerFragment", "clickplay!");
+                Intent intent = new Intent(mContext, FragmentPlayerService.class);
+                intent.setAction(FragmentPlayerService.ACTION_PAUSEPLAY);
+                mContext.startService(intent);
             }
             break;
         case R.id.helpbutton: // ヘルプボタン
@@ -251,6 +245,7 @@ public class PlayerFragment extends Fragment implements OnClickListener, OnGestu
      * @param audio AudioEntity
      */
     public void changeText(AudioEntity audio) {
+        Log.v("aaaaaaaaa", "change!");
         // タイトル変更処理
         mTitleView.setText(audio.title);
         // アルバム変更処理
@@ -293,29 +288,71 @@ public class PlayerFragment extends Fragment implements OnClickListener, OnGestu
 
     /**
      * ジェスチャーを受け取って再生停止などを行うメソッド<br>
-     * @param action ジェスチャー TODO シャッフルをサービスに移植 TODO リピートをサービスに移植
+     * @param action
      */
     public void action(String action) {
         if (action.equals(Const.SHUFFLE)) {
             if (FragmentPlayerService.getShuffle()) {
                 FragmentPlayerService.setShuffle(false);
-                mShuffleText.setVisibility(View.INVISIBLE);
+                changeVisibleShuffleText(false);
             } else {
                 FragmentPlayerService.setShuffle(true);
-                mShuffleText.setVisibility(View.VISIBLE);
+                changeVisibleShuffleText(true);
             }
         } else if (action.equals(Const.REPEAT)) {
             if (FragmentPlayerService.getRepeat()) {
                 FragmentPlayerService.setRepeat(false);
-                mRepeatText.setVisibility(View.INVISIBLE);
+                changeVisibleRepeatText(false);
             } else {
                 FragmentPlayerService.setRepeat(true);
-                mRepeatText.setVisibility(View.VISIBLE);
+                changeVisibleRepeatText(true);
             }
         } else if (action.equals(Const.NEXT)) {
-            // next();
+            Log.v("PlayerFragment", "Next!");
+            Intent intent = new Intent(mContext, FragmentPlayerService.class);
+            intent.setAction(FragmentPlayerService.ACTION_NEXT);
+            mContext.startService(intent);
         } else if (action.endsWith(Const.PREV)) {
-            // prev();
+            Log.v("PlayerFragment", "PREV!");
+            Intent intent = new Intent(mContext, FragmentPlayerService.class);
+            intent.setAction(FragmentPlayerService.ACTION_PREV);
+            mContext.startService(intent);
+        }
+    }
+
+    public void changeVisibleRepeatText(boolean flg) {
+        if (flg) {
+            mRepeatText.setVisibility(View.VISIBLE);
+        } else {
+            mRepeatText.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void changeVisibleShuffleText(boolean flg) {
+        if (flg) {
+            mShuffleText.setVisibility(View.VISIBLE);
+        } else {
+            mShuffleText.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void changePlayingText() {
+        if (FragmentPlayerService.isPlaying() && FragmentPlayerService.isServiceLiving()) {
+            Log.v("PlayerFragment", "change to pause");
+            mPlayText.setText(R.string.PlayerPause);
+        } else if (!FragmentPlayerService.isPlaying() && FragmentPlayerService.isServiceLiving()) {
+            Log.v("PlayerFragment", "change to playing");
+            mPlayText.setText(R.string.PlayerPlaying);
+        }
+    }
+
+    public void changePlayingText(boolean playing) {
+        if (playing) {
+            Log.v("PlayerFragment", "change to playing");
+            mPlayText.setText(R.string.PlayerPlaying);
+        } else {
+            Log.v("PlayerFragment", "change to pause");
+            mPlayText.setText(R.string.PlayerPause);
         }
     }
 }

@@ -7,12 +7,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
 
+import jp.co.mti.adc.growup.fragmentplayer.Const;
 import jp.co.mti.adc.growup.fragmentplayer.R;
+import jp.co.mti.adc.growup.fragmentplayer.activity.FragmentPlayerActivity;
 import jp.co.mti.adc.growup.fragmentplayer.dao.AudioDao;
 import jp.co.mti.adc.growup.fragmentplayer.dto.ArtistListDto;
 import jp.co.mti.adc.growup.fragmentplayer.entity.AudioEntity;
+import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
@@ -33,6 +38,14 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
 
     public static final String ACTION_PAUSE = "pause";
 
+    public static final String ACTION_PAUSEPLAY = "pauseplay";
+
+    public static final String ACTION_NEXT = "next";
+
+    public static final String ACTION_PREV = "prev";
+
+    private static final int NOTIFY_ID = 1;
+
     /** オーディオid. */
     private String mAudioId;
 
@@ -40,10 +53,16 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
     static MediaPlayer mMediaPlayer;
 
     /** NotificationManager. */
-    private NotificationManager mNotify;
+    private NotificationManager mNotifyManager;
+
+    /** notification. */
+    private Notification mNotification;
 
     /** audio dao. */
     AudioDao mAudioDao;
+
+    /** 再生中のaudio entity. */
+    AudioEntity mAudio;
 
     /** 再生準備完了のフラグ. */
     public static boolean isPrepared;
@@ -54,20 +73,23 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
     /** 再生中リスト. */
     public static ArrayList<ArtistListDto> mArtistList;
 
-    /** シャッフルフラグ. */
+    /** シャッフル状態フラグ. */
     private static boolean isShuffle = false;
 
+    /** シャッフル状態セッター. */
     public static void setShuffle(boolean shuffle) {
         isShuffle = shuffle;
     }
 
+    /** シャッフル状態ゲッター. */
     public static boolean getShuffle() {
         return isShuffle;
     }
 
-    /** リピートフラグ. */
+    /** リピート状態フラグ. */
     private static boolean isRepeat = false;
 
+    /** リピート状態セッター. */
     public static void setRepeat(boolean repeat) {
         isRepeat = repeat;
         mMediaPlayer.pause();
@@ -75,18 +97,23 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
         mMediaPlayer.start();
     }
 
+    /** リピート状態ゲッター. */
     public static boolean getRepeat() {
         return isRepeat;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void onCreate() {
         super.onCreate();
         Log.e(TAG, "ccccccccccccccccccccCreate!!");
-        mNotify = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
+        // notification初期化
+        mNotifyManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        int icon = R.drawable.ic_launcher;
+        CharSequence tickerText = "再生中";
+        long when = System.currentTimeMillis();
+        mNotification = new Notification(icon, tickerText, when);
+
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setOnCompletionListener(this);
         mAudioDao = new AudioDao(getApplicationContext().getContentResolver());
@@ -96,19 +123,36 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
         mArtistList = new ArrayList<ArtistListDto>();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
         Log.e(TAG, "oooooooooooooooooonStartCommand");
         String action = intent.getAction();
+
+        // Actionで処理分岐
         if (action.equals(ACTION_PLAY)) {
-            Log.e(TAG, ACTION_PLAY);
+            Log.v(TAG, ACTION_PLAY);
             mAudioId = mArtistList.get(mPlayingPosition).getId();
             play(mAudioId);
+        } else if (action.equals(ACTION_PAUSE)) {
+            Log.v(TAG, ACTION_PAUSE);
+            if (mMediaPlayer.isPlaying()) {
+                pause();
+                sendNotification(false);
+            }
+        } else if (action.equals(ACTION_PAUSEPLAY)) {
+            Log.v(TAG, ACTION_PAUSEPLAY);
+            if (!mMediaPlayer.isPlaying() && !(mArtistList.size() == 0)) {
+                mMediaPlayer.start();
+                sendBroadcast2FragmentPlayerActivity();
+                sendNotification(true);
+            }
+        } else if (action.equals(ACTION_NEXT)) {
+            next();
+        } else if (action.equals(ACTION_PREV)) {
+            prev();
         }
+
         return START_NOT_STICKY;
     }
 
@@ -123,7 +167,6 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
     @Override
     public IBinder onBind(Intent intent) {
         Log.e(TAG, "onBind");
-        // TODO Bindされたらそのとき再生している楽曲に関する情報
         return binder;
     }
 
@@ -148,6 +191,7 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
             mMediaPlayer.prepare();
             isPrepared = true;
             mMediaPlayer.start();
+            Log.e(TAG, "play" + audio.data);
         } catch (IllegalArgumentException e) {
             Log.e("play error IllegalArgument", e.toString());
         } catch (IllegalStateException e) {
@@ -156,10 +200,35 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
             Log.e("play error IOException", e.toString());
         }
 
-        // TODO ブロードキャストを投げる
-        Intent intent = new Intent();
+        mAudio = audio;
+        sendBroadcast2FragmentPlayerActivity();
+        sendNotification(true);
+    }
 
+    private void sendBroadcast2FragmentPlayerActivity() {
+        // ブロードキャストを投げる
+        Intent intent = new Intent("jp.co.mti.adc.growup.fragmentplayer.PLAY");
+        intent.putExtra(Const.ID, mAudio.id);
+        intent.putExtra(Const.ALBUMID, mAudio.albumId);
+        intent.putExtra(Const.TITLE, mAudio.title);
+        intent.putExtra(Const.ALBUM, mAudio.album);
+        intent.putExtra(Const.ARTIST, mAudio.artist);
         sendBroadcast(intent);
+        Log.e(TAG, "sendBroadcast!" + mAudio.id + ":" + mAudio.albumId + ":" + mAudio.title);
+    }
+
+    private void sendNotification(boolean send) {
+        if (send) {
+            Context context = getApplicationContext();
+            CharSequence title = mAudio.title;
+            CharSequence text = mAudio.artist;
+            Intent i = new Intent(FragmentPlayerService.this, FragmentPlayerActivity.class);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, i, 0);
+            mNotification.setLatestEventInfo(context, title, text, pendingIntent);
+            mNotifyManager.notify(NOTIFY_ID, mNotification);
+        } else if (!send) {
+            mNotifyManager.cancel(NOTIFY_ID);
+        }
     }
 
     /**
@@ -181,7 +250,8 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
             } else {
                 mPlayingPosition++;
             }
-            play(mArtistList.get(playNo).getId());
+            mAudioId = mArtistList.get(playNo).getId();
+            play(mAudioId);
         } else {
             Toast.makeText(getApplicationContext(), getString(R.string.NoSongs), Toast.LENGTH_SHORT).show();
         }
@@ -198,7 +268,8 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
             } else {
                 mPlayingPosition--;
             }
-            play(mArtistList.get(playNo).getId());
+            mAudioId = mArtistList.get(playNo).getId();
+            play(mAudioId);
         } else {
             Toast.makeText(getApplicationContext(), getString(R.string.NoSongs), Toast.LENGTH_SHORT).show();
         }
@@ -216,11 +287,33 @@ public class FragmentPlayerService extends Service implements OnCompletionListen
     }
 
     /**
+     * 再生リストのサイズチェック.<br>
+     * nullもしくはsizeが0ならサービス使用中ではない<br>
+     * @return
+     */
+    public static boolean isServiceLiving() {
+        return !(mArtistList == null || mArtistList.size() == 0);
+    }
+
+    /**
      * メディアファイルの再生が終わった時のイベント
      */
     @Override
     public void onCompletion(MediaPlayer arg0) {
         pause();
         next();
+    }
+
+    /**
+     * play中かどうか
+     * @return
+     */
+    public static boolean isPlaying() {
+        return mMediaPlayer.isPlaying();
+    }
+
+    /** Audioのゲッター. */
+    public AudioEntity getAudio() {
+        return mAudio;
     }
 }

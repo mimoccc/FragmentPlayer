@@ -22,6 +22,7 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnFocusChangeListener;
@@ -40,27 +41,37 @@ import android.widget.TextView;
 public class FragmentPlayerActivity extends FragmentActivity implements OnLeftFragmentListViewItemListener, OnScrollListener, OnListButtonListener, OnCancelButtonListener, OnFocusChangeListener,
         OnActionSearchListener {
 
+    /** TAG. */
+    private static final String TAG = "FragmentPlayerActivity";
+
     /** TOP画面開閉処理クラス . */
     public FacebookLikePager mPager;
 
     /** Player画面. */
     private PlayerFragment mPlayerFragment;
 
-    /** receiver. */
+    /** ブロードキャストレシーバ. */
     private BroadcastReceiver receiver;
 
+    /** サービス. */
     private FragmentPlayerService mService = null;
 
+    /** サービスコネクション. */
     public ServiceConnection conn = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
-            System.out.println("onServiceConnected2");
+            Log.v(TAG, "onServiceConnected");
             mService = ((FragmentPlayerService.ServiceBinder) service).getService();
+            if (mService.isServiceLiving()) {
+                mPlayerFragment.changeText(mService.getAudio());
+                mPlayerFragment.changeVisibleRepeatText(FragmentPlayerService.getRepeat());
+                mPlayerFragment.changeVisibleShuffleText(FragmentPlayerService.getShuffle());
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName className) {
-            System.out.println("onServiceDisconnected2");
+            Log.v(TAG, "onServiceDisconnected");
             mService = null;
         }
     };
@@ -83,14 +94,18 @@ public class FragmentPlayerActivity extends FragmentActivity implements OnLeftFr
             public void onClick(View view) {
             }
         });
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // レシーバ登録
         receiver = new FragmentIntentReceiver();
-        IntentFilter intentFilter = new IntentFilter();
+        IntentFilter intentFilter = new IntentFilter("jp.co.mti.adc.growup.fragmentplayer.PLAY");
         registerReceiver(receiver, intentFilter);
         // サービス起動
         Intent intent = new Intent(FragmentPlayerActivity.this, FragmentPlayerService.class);
         intent.setAction(FragmentPlayerService.ACTION_PAUSE);
-        startService(intent);
 
         // サービスバインド
         bindService(intent, conn, Context.BIND_AUTO_CREATE);
@@ -104,13 +119,16 @@ public class FragmentPlayerActivity extends FragmentActivity implements OnLeftFr
          */
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.v("FragmentPlayerActivity", "onRecieveeeeeeeeeeeeeeeeeeeeeeeeeee");
             AudioEntity audio = new AudioEntity();
-            audio.id = intent.getStringExtra(Const.ID);
-            audio.albumId = intent.getStringExtra(Const.ALBUMID);
-            audio.title = intent.getStringExtra(Const.TITLE);
-            audio.album = intent.getStringExtra(Const.ALBUM);
-            audio.artist = intent.getStringExtra(Const.ARTIST);
+            Bundle bundle = intent.getExtras();
+            audio.id = bundle.getString(Const.ID);
+            audio.albumId = bundle.getString(Const.ALBUMID);
+            audio.title = bundle.getString(Const.TITLE);
+            audio.album = bundle.getString(Const.ALBUM);
+            audio.artist = bundle.getString(Const.ARTIST);
             mPlayerFragment.changeText(audio);
+            mPlayerFragment.changePlayingText(true);
         }
 
     }
@@ -175,6 +193,7 @@ public class FragmentPlayerActivity extends FragmentActivity implements OnLeftFr
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(receiver);
+        unbindService(conn);
     }
 
     @Override
@@ -251,4 +270,5 @@ public class FragmentPlayerActivity extends FragmentActivity implements OnLeftFr
         startService(intent);
         openBehind();
     }
+
 }

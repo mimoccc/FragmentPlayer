@@ -31,6 +31,16 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
+                    android:ellipsize="marquee"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1.0"
+                    android:shadowDy="1.0"
+                    android:shadowRadius="2.0"
+                    android:singleLine="true"
                     android:textSize="30sp" />
 
                 <TextView
@@ -38,6 +48,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1.0"
+                    android:shadowDy="1.0"
+                    android:shadowRadius="2.0"
                     android:textSize="14sp" />
 
                 <TextView
@@ -45,6 +59,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="right"
+                    android:shadowColor="#000000"
+                    android:shadowDx="1.0"
+                    android:shadowDy="1.0"
+                    android:shadowRadius="2.0"
                     android:textSize="12sp" />
             </LinearLayout>
 
@@ -103,8 +121,10 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:eventsInterceptionEnabled="true"
+            android:gestureColor="#5555ff"
             android:gestureStrokeType="single"
-            android:orientation="vertical" >
+            android:orientation="vertical"
+            android:uncertainGestureColor="#5555ff" >
         </android.gesture.GestureOverlayView>
     </RelativeLayout>
 
